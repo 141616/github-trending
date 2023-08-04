@@ -8,9 +8,15 @@ function App() {
   });
   const [error, setError] = React.useState(null);
 
+  const reposStorageMap = React.useRef({})
+
   React.useEffect(() => {
     fetchRepos(params.language, params.page);
-  }, [params]);
+  }, []);
+
+  const updateReposStorageMap = (items, lang) => {
+    reposStorageMap.current[lang] = items;
+  }
 
   const fetchRepos = (language, page) => {
     setLoading(true);
@@ -21,6 +27,7 @@ function App() {
       .then((data) => {
         if (page === 1) {
           setRepos(data.items);
+          updateReposStorageMap(data.items, language);
         } else {
           setRepos([...repos, ...data.items]);
         }
@@ -36,10 +43,17 @@ function App() {
 
   const handleLanguageChange = (val) => {
     setParams({
-      ...params,
       language: val,
       page: 1,
     });
+    setError(null);
+    const storageRepos = reposStorageMap.current && (reposStorageMap.current[val] || []);
+    if (storageRepos && storageRepos.length > 0) {
+      setRepos(storageRepos);
+    } else {
+      setRepos([]);
+      fetchRepos(val, 1);
+    }
     window.history.replaceState({}, "", generatePushUrl(val));
   };
 
@@ -63,10 +77,12 @@ function App() {
             if (loading) {
               return;
             }
+            const newPage = params.page + 1;
             setParams({
               ...params,
-              page: params.page + 1,
+              page: newPage,
             });
+            fetchRepos(params.language, newPage);
           }}
         />
       )}
