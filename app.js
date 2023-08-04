@@ -38,6 +38,7 @@ function App() {
     setParams({
       ...params,
       language: val,
+      page: 1,
     });
     window.history.replaceState({}, "", generatePushUrl(val));
   };
